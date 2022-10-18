@@ -32,3 +32,8 @@ source ${SCRIPT_DIR}/addons/applications.sh
 # STEP 3: Install Packages
 
 source ${SCRIPT_DIR}/addons/packages.sh
+
+# STEP 4: Copy Scripts to PATH
+
+chmod +x ./scripts/provision
+cp ./script/provision /usr/local/bin

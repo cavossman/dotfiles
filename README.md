@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Create a script to provision a new Macbook. Install all the necessities.
+Create a script to provision a new Macbook. Install all the necessities. Additional provision scripts included.
 
 ## Additional Considerations
 
@@ -10,6 +10,22 @@ Create a script to provision a new Macbook. Install all the necessities.
 - VS Code Extensions
 - Enable zsh plugins manually and change theme
 
-## Future additions
+## Scripts
 
-- Install and configure languages and packages
+### Provision
+
+Provision local Laravel and WP projects.
+
+#### Usage
+
+- `provision laravel example.com`
+  - Pull example.com from Github
+- `provision laravel example.com -n`
+  - Create a fresh Laravel install
+- `provision laravel example.com -d`
+  - Delete files (db, repo, apache conf, etc)
+
+#### Future Ideas
+
+- Pull copy of remote db when cloning from a git repo.
+- `-u` option to pull fresh copy of remote db
