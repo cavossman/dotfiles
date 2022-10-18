@@ -4,6 +4,10 @@
 
 Create a script to provision a new Macbook. Install all the necessities. Additional provision scripts included.
 
+## Getting Started
+
+`./boostrap.sh` - Provision local machine.
+
 ## Additional Considerations
 
 - Langauges and packages (PHP, Apache, MySQL, node, imagemagick, etc.)

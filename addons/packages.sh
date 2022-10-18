@@ -55,10 +55,10 @@ fi
 
 echo "${GREEN}Congfiguring database...${NOCOL}\n"
 
-brew install mariadb mysql-client
+brew install -q mariadb mysql-client
 brew services start mariadb
 
-if [[ ! -f "~/.my.cnf" ]]; then
+if [ ! -f ~/.my.cnf ]; then
     printf "${CLEAR}"
 
     echo "\nEnter your desired local DB password:"

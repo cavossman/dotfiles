@@ -9,8 +9,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # STEP 1: Initial Setup
 echo "${GREEN}Intitiating setup...${NOCOL}\n"
 
-which -s brew
-if [[ $? != 0 ]]; then
+if ! brew -v &> /dev/null; then
     bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
     # If M1 Mac then add brew to path.
@@ -36,4 +35,4 @@ source ${SCRIPT_DIR}/addons/packages.sh
 # STEP 4: Copy Scripts to PATH
 
 chmod +x ./scripts/provision
-cp ./scripts/provision /usr/local/bin
+sudo cp ./scripts/provision /usr/local/bin
