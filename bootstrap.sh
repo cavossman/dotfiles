@@ -9,6 +9,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # STEP 1: Initial Setup
 echo "${GREEN}Intitiating setup...${NOCOL}\n"
 
+mkdir -p ~/projects
+
 if ! brew -v &> /dev/null; then
     bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -36,3 +38,6 @@ source ${SCRIPT_DIR}/addons/packages.sh
 
 chmod +x ./scripts/provision
 sudo cp ./scripts/provision /usr/local/bin
+
+# STEP 5: Copy dotfiles
+cp -a ./files/. ~/projects
