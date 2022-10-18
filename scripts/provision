@@ -754,9 +754,11 @@ laravel() {
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
       echo -e "\nDeleting files..."
+
       rm -rf ~/projects/${_cleanFolderName}
       rm -f $(brew --prefix)/etc/httpd/sites-enabled/${_cleanDomainName}.conf >/dev/null 2>&1
       sudo sed -i .bak "/${_cleanDomainName}/d" /etc/hosts >/dev/null 2>&1
+      sudo brew services restart httpd
 
       echo -e "\nFiles deleted. Your database is still intact, if you want to delete that you should do so manually."
       exit
@@ -770,7 +772,10 @@ laravel() {
   then
     echo 'Provisioning a fresh Laravel install'
     composer create-project laravel/laravel ${_cleanFolderName}
+    cd ~/projects/${_cleanFolderName}
     git init
+    git add --all
+    git commit -m "Initial commit"
   else
     local _repoMessage=$(curl https://api.github.com/repos/cavossman/${_cleanName} 2>/dev/null | jq -r '.message')
     if [ ${_repoMessage} = 'Not Found' ]
@@ -783,7 +788,7 @@ laravel() {
     fi
   fi
 
-  cd ${_cleanFolderName}
+  cd ~/projects/${_cleanFolderName}
   composer install
   npm i
 
@@ -852,6 +857,8 @@ laravel() {
   echo -e $APACHE_VHOST 2>/dev/null | sudo tee -a $(brew --prefix)/etc/httpd/sites-enabled/${_cleanDomainName}.conf >/dev/null 2>&1
 
   sudo bash -c 'echo -e "127.0.0.1 $0\n::1 $0" 2>/dev/null' ${_cleanDomainName} | sudo tee -a /etc/hosts >/dev/null 2>&1
+
+  sudo brew services restart httpd
 
   if [ ${_fresh} = false ]
   then
