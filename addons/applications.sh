@@ -1,6 +1,8 @@
 echo "${GREEN}Installing desktop applications... This may take a while.${NOCOL}\n"
 
-brew install docker
+if [[ ! -d "/Applications/Docker.app" ]]; then
+    brew install --cask docker
+fi
 
 if [[ ! -d "/Applications/iTerm.app" ]]; then
     brew install --cask iterm2
