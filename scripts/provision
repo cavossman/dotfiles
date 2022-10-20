@@ -808,6 +808,9 @@ laravel() {
 
   mysql -e "CREATE DATABASE IF NOT EXISTS $_cleanDatabaseName"
 
+  sed -i '' "/^DB_DATABASE/ s/=.*$/=${_cleanDatabaseName}/" ~/projects/${_cleanFolderName}/.env 
+  sed -i '' "/^DB_USERNAME/ s/=.*$/=${_dbUsername}/" ~/projects/${_cleanFolderName}/.env
+  sed -i '' "/^DB_PASSWORD/ s/=.*$/=${_dbPassword}/" ~/projects/${_cleanFolderName}/.env
 
   # Setup Apache
   local _certPath="$(brew --prefix)/etc/httpd/certs"
