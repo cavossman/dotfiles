@@ -4,8 +4,8 @@ if [[ ! -d "/Applications/Docker.app" ]]; then
     brew install --cask docker
 fi
 
-if [[ ! -d "/Applications/iTerm.app" ]]; then
-    brew install --cask iterm2
+if [[ ! -d "/Applications/Warp.app" ]]; then
+    brew install --cask warp
 fi
 
 if [[ ! -d "/Applications/Visual Studio Code.app" ]]; then

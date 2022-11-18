@@ -14,6 +14,9 @@ brew install -q nghttp2 openssl
 brew install -q imagemagick awscli htop
 brew install -q wp-cli
 
+# QOL
+brew install exa
+
 # Install more up-to-date version of rsync and link it
 brew install -q rsync
 brew link -f rsync
@@ -136,3 +139,6 @@ mkdir $CERT_PATH
 
 echo "You need to edit: ${BREW_PREFIX}/etc/httpd/extra/httpd-ssl.conf and manually remove the <VirtualHost> block for now.\n"
 
+# Misc.
+brew tap homebrew/cask-fonts
+brew install --cask font-hack-nerd-font # Use: Hack Nerd Font (Monospace)
