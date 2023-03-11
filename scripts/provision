@@ -976,7 +976,7 @@ wp() {
 
     curl "https://raw.githubusercontent.com/github/gitignore/main/WordPress.gitignore" > .gitignore
 
-    $(brew --prefix)/bin/wp core install --url=${_cleanDomainName} --title="Another WP Site" --admin_user="Collin Vossman" --admin_email="cavossman@gmail.com"
+    $(brew --prefix)/bin/wp core install --url=${_cleanDomainName} --title="Another WP Site" --admin_user="Collin Vossman" --admin_email="cavossman@gmail.com" --admin_password="password"
     git init
     git add --all
     git commit -m "Initial commit"
