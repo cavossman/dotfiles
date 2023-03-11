@@ -700,7 +700,7 @@ Options:
   -d --delete  Delete local Laravel project
   -u --update  Update local Laravel database
 Description:
-  Provision local environtment for Laravel applications.
+  Provision local environment for Laravel applications.
 HEREDOC
 laravel() {
   local _arguments=()
@@ -780,7 +780,7 @@ laravel() {
     local _repoMessage=$(curl https://api.github.com/repos/cavossman/${_cleanName} 2>/dev/null | jq -r '.message')
     if [ ${_repoMessage} = 'Not Found' ]
     then 
-      echo 'Repo not found. Check spelling first and rerun without --new to create a fresh project.'
+      echo 'Repo not found. Check spelling or rerun with --new to create a fresh project.'
       exit
     else
       echo 'Repo found.'
@@ -841,6 +841,188 @@ laravel() {
   ServerName ${_cleanDomainName}\n
   DocumentRoot ${_projectRoot}/${_cleanFolderName}/public\n
   <Directory ${_projectRoot}/${_cleanFolderName}/public>\n
+    Options FollowSymLinks MultiViews\n
+    AllowOverride all\n
+    Require all granted\n
+  </Directory>\n
+  SetEnv DB_USER ${_dbUsername}\n
+  SetEnv DB_HOST localhost\n
+  SetEnv DB_PASSWORD ${_dbPassword}\n
+  SetEnv DB_NAME ${_cleanDatabaseName}\n
+  SetEnv LOCAL_HOST ${_cleanDomainName}\n
+  ErrorLog /var/log/apache2/${_cleanDomainName}-error.log\n
+  LogLevel error\n
+  CustomLog /var/log/apache2/${_cleanDomainName}-access.log combined\n\n
+  SSLCertificateFile \"${_certPath}/${_cleanDomainName}.pem\"\n
+  SSLCertificateKeyFile \"${_certPath}/${_cleanDomainName}-key.pem\"\n
+</VirtualHost>"
+
+  echo -e $APACHE_VHOST 2>/dev/null | sudo tee -a $(brew --prefix)/etc/httpd/sites-enabled/${_cleanDomainName}.conf >/dev/null 2>&1
+
+  sudo bash -c 'echo -e "127.0.0.1 $0\n::1 $0" 2>/dev/null' ${_cleanDomainName} | sudo tee -a /etc/hosts >/dev/null 2>&1
+
+  sudo brew services restart httpd
+
+  if [ ${_fresh} = false ]
+  then
+    # import remote db
+    echo 'Importing database...'
+  fi
+}
+
+# WordPress #####################################################################
+
+describe "wp" <<HEREDOC
+Usage:
+  ${_ME} wp <example.com> [--new | -n]
+  ${_ME} wp <example.com> [--delete | -d]
+  ${_ME} wp <example.com> [--update | -u]
+Options:
+  -n --new     Create fresh WordPress project
+  -d --delete  Delete local WordPress project
+  -u --update  Update local WordPress database
+Description:
+  Provision local environment for WordPress applications.
+HEREDOC
+wp() {
+  local _arguments=()
+  local _name=
+  local _fresh=false
+  local _delete=false
+  local _update=false
+
+  for __arg in "${@:-}"
+  do
+    case ${__arg} in
+      --new | -n)
+        _fresh=true
+        ;;
+      --delete | -d)
+        _delete=true
+        ;;
+      --update | -u)
+        _update=true
+        ;;
+      *)
+        if _blank "${_name}"
+        then
+          _name="${__arg}"
+        else
+          _arguments+=("${__arg}")
+        fi
+        ;;
+    esac
+  done
+
+  cd ~/projects/
+  local _projectRoot=$(pwd)
+
+  local _tld=".test" # The TLD for development.
+  local _cleanName=${_name%*.*} # api.example.com -> api.example
+  local _cleanDomainName=${_cleanName}${_tld} # api.example -> api.example.test
+  local _cleanFolderName=${_cleanDomainName//./-} # api.example.test -> api-example-test
+  local _cleanDatabaseName=${_cleanDomainName//./_} # api.example.test -> api_example_test
+
+  if [ ${_update} = true ]
+  then
+    # import remote db
+    exit
+  fi
+
+  if [ ${_delete} = true ]
+  then
+    echo "Are you sure you want to delete files for ${_cleanName}?"
+    read -p "" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+      echo -e "\nDeleting files..."
+
+      rm -rf ~/projects/${_cleanFolderName}
+      rm -f $(brew --prefix)/etc/httpd/sites-enabled/${_cleanDomainName}.conf >/dev/null 2>&1
+      sudo sed -i .bak "/${_cleanDomainName}/d" /etc/hosts >/dev/null 2>&1
+      sudo brew services restart httpd
+
+      echo -e "\nFiles deleted. Your database is still intact, if you want to delete that you should do so manually."
+      exit
+    else
+      echo -e "\nDeletion canceled."
+      exit
+    fi
+  fi
+
+  if [ ${_fresh} = true ]
+  then
+    echo 'Provisioning a fresh WordPress install'
+    mkdir ~/projects/${_cleanFolderName}
+    cd ~/projects/${_cleanFolderName}
+    $(brew --prefix)/bin/wp core download
+
+    local _dbPassword=
+    local _dbUsername=
+    while IFS='=' read VAR VAL; do
+      if [[ $VAR == '[client]' ]]; then DB_VAL="1"; fi
+      if [[ $VAL ]]; then
+        if [[ $DB_VAL == '1' ]]; then
+          if [[ $VAR == 'user' ]]; then _dbUsername=$VAL; fi
+          if [[ $VAR == 'password' ]]; then _dbPassword=$VAL; fi
+          if [[ ! -z $_dbUsername ]] && [[ ! -z $_dbPassword ]]; then DB_VAL="0"; fi
+        fi
+      fi
+    done <~/.my.cnf
+  
+    $(brew --prefix)/bin/wp core config --dbname=${_cleanDatabaseName} --dbuser=${_dbUsername} --dbpass=${_dbPassword}
+
+    $(brew --prefix)/bin/wp db create || true # The or true part is to catch if database has been created already.
+
+    curl "https://raw.githubusercontent.com/github/gitignore/main/WordPress.gitignore" > .gitignore
+
+    $(brew --prefix)/bin/wp core install --url=${_cleanDomainName} --title="Another WP Site" --admin_user="Collin Vossman" --admin_email="cavossman@gmail.com"
+    git init
+    git add --all
+    git commit -m "Initial commit"
+  else
+    local _repoMessage=$(curl https://api.github.com/repos/cavossman/${_cleanName} 2>/dev/null | jq -r '.message')
+    if [ ${_repoMessage} = 'Not Found' ]
+    then 
+      echo 'Repo not found. Check spelling or rerun with --new to create a fresh project.'
+      exit
+    else
+      echo 'Repo found.'
+      git clone git@github.com:cavossman/${_cleanName}.git ${_cleanFolderName}
+    fi
+  fi
+
+  cd ~/projects/${_cleanFolderName}
+
+  # Setup Apache
+  local _certPath="$(brew --prefix)/etc/httpd/certs"
+  cd ${_certPath}
+  sudo mkcert $_cleanDomainName
+
+  APACHE_VHOST="
+<VirtualHost *:80>\n
+  ServerAdmin webmaster@localhost\n
+  ServerName ${_cleanDomainName}\n
+  DocumentRoot ${_projectRoot}/${_cleanFolderName}\n
+  <Directory ${_projectRoot}/${_cleanFolderName}>\n
+    Options FollowSymLinks MultiViews\n
+    AllowOverride all\n
+    Require all granted\n
+  </Directory>\n
+  SetEnv DB_USER ${_dbUsername}\n
+  SetEnv DB_HOST localhost\n
+  SetEnv DB_PASSWORD ${_dbPassword}\n
+  SetEnv DB_NAME ${_cleanDatabaseName}\n
+  SetEnv LOCAL_HOST ${_cleanDomainName}\n
+  ErrorLog /var/log/apache2/${_cleanDomainName}-error.log\n
+  LogLevel error\n
+  CustomLog /var/log/apache2/${_cleanDomainName}-access.log combined\n
+</VirtualHost>\n\n
+<VirtualHost *:443>\n
+  ServerAdmin webmaster@localhost\n
+  ServerName ${_cleanDomainName}\n
+  DocumentRoot ${_projectRoot}/${_cleanFolderName}\n
+  <Directory ${_projectRoot}/${_cleanFolderName}>\n
     Options FollowSymLinks MultiViews\n
     AllowOverride all\n
     Require all granted\n
